@@ -213,6 +213,10 @@ h2 { font-size: 1.1rem; }
             <span class="mode-title">हिन्दी (Hindi)</span>
             <span class="mode-sub">Translate questions to Hindi</span>
         </button>
+        <button class="mode-btn" id="btnLangPunjabi">
+            <span class="mode-title">ਪੰਜਾਬੀ (Punjabi)</span>
+            <span class="mode-sub">Translate questions to Punjabi (Gurmukhi script)</span>
+        </button>
     </div>
 </div>
 
@@ -228,6 +232,7 @@ h2 { font-size: 1.1rem; }
     <p class="muted">Totale domande nel database: <strong id="totalCount">0</strong></p>
     <p class="muted" id="statsLine"></p>
     <button id="btnResetProgress" class="reset-link hidden">Reimposta tutte le statistiche e gli errori</button>
+    <button id="btnChangeLang" class="reset-link" style="color: var(--muted);">🌐 Cambia lingua di traduzione</button>
 
     <div class="mode-grid">
         <button class="mode-btn exam" id="btnExam">
@@ -304,8 +309,8 @@ let quiz = null;          // {ids, pos, score, errors, mode, maxErrors, history}
 
 // Мова перекладу — обирається на першому екрані, зберігається на пристрої
 let TRANSLATE_LANG = localStorage.getItem("patenteLang") || null; // "ur" або "hi"
-const LANG_NAMES = { ur: "urdu", hi: "hindi" };
-const LANG_RTL = { ur: true, hi: false };
+const LANG_NAMES = { ur: "urdu", hi: "hindi", pa: "punjabi" };
+const LANG_RTL = { ur: true, hi: false, pa: false };
 let mistakeIds = new Set();      // id-и питань, де хоч раз була помилка
 let totalAnswered = 0;
 let totalCorrect = 0;
@@ -457,6 +462,11 @@ document.getElementById("btnLangHindi").addEventListener("click", () => {
     localStorage.setItem("patenteLang", "hi");
     startApp();
 });
+document.getElementById("btnLangPunjabi").addEventListener("click", () => {
+    TRANSLATE_LANG = "pa";
+    localStorage.setItem("patenteLang", "pa");
+    startApp();
+});
 
 if (TRANSLATE_LANG) {
     startApp();
@@ -557,6 +567,13 @@ document.getElementById("btnResetProgress").addEventListener("click", () => {
         saveProgress();
         goHome();
     }
+});
+
+document.getElementById("btnChangeLang").addEventListener("click", () => {
+    localStorage.removeItem("patenteLang");
+    TRANSLATE_LANG = null;
+    document.getElementById("screen-home").classList.add("hidden");
+    document.getElementById("screen-language").classList.remove("hidden");
 });
 
 document.getElementById("btnExam").addEventListener("click", startExam);

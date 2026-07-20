@@ -1,7 +1,7 @@
 {
-  "name": "Quiz Patente B (Urdu/Hindi)",
+  "name": "Quiz Patente B (Urdu/Hindi/Punjabi)",
   "short_name": "Patente B",
-  "description": "Italian driving test practice with Urdu and Hindi translation",
+  "description": "Italian driving test practice with Urdu, Hindi and Punjabi translation",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f1720",
