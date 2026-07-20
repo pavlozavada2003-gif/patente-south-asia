@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Quiz Patente B — Urdu</title>
+
+<!-- PWA: можна "Додати на головний екран" і воно працюватиме як застосунок -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2f9e44">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Patente B">
+<style>
+:root {
+    --bg: #0f1720;
+    --card: #1a2432;
+    --accent: #2f9e44;
+    --accent-dark: #237a34;
+    --danger: #d9463d;
+    --text: #eef2f5;
+    --muted: #93a1b0;
+    --border: #2b3646;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+}
+header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 700;
+}
+main {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 20px 16px 60px;
+}
+.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    margin-bottom: 16px;
+}
+h1 { margin-top: 0; font-size: 1.4rem; }
+h2 { font-size: 1.1rem; }
+.muted { color: var(--muted); font-size: 0.9rem; }
+.hidden { display: none !important; }
+
+/* --- завантаження файлу --- */
+.upload-box {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 28px 16px;
+    text-align: center;
+}
+.upload-box input[type=file] { display: none; }
+.upload-btn {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    font-weight: 700;
+    padding: 12px 22px;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+#imgUploadWrap { margin-top: 14px; }
+
+/* --- режими --- */
+.mode-grid { display: grid; gap: 12px; margin: 16px 0; }
+.mode-btn {
+    display: flex; flex-direction: column; gap: 4px;
+    background: #22303f; border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px;
+    color: var(--text); text-decoration: none; cursor: pointer;
+    text-align: left; font: inherit;
+}
+.mode-btn.exam { background: linear-gradient(135deg, #2f9e44, #237a34); border: none; }
+.mode-title { font-weight: 700; }
+.mode-sub { color: var(--muted); font-size: 0.85rem; }
+.mode-btn.exam .mode-sub { color: #dff5e3; }
+
+.chapters { display: grid; grid-template-columns: 1fr; gap: 8px; max-height: 420px; overflow-y: auto; }
+.chapter-btn {
+    display: flex; flex-direction: column;
+    background: #22303f; border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 12px;
+    color: var(--text); font-size: 0.9rem; cursor: pointer;
+    text-align: left; font-family: inherit;
+}
+.chapter-btn .count { color: var(--muted); font-size: 0.75rem; }
+
+/* --- питання --- */
+.progress-row { display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--muted); margin-bottom: 8px; }
+.progress-bar { height: 6px; background: var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 20px; }
+.progress-fill { height: 100%; background: var(--accent); transition: width .2s; }
+.question-image { text-align: center; margin-bottom: 16px; }
+.question-image img { max-width: 100%; max-height: 220px; border-radius: 10px; background: white; padding: 8px; }
+.question-text { font-size: 1.15rem; line-height: 1.5; margin-bottom: 24px; }
+.answer-row { display: flex; gap: 12px; }
+.answer-btn { flex: 1; padding: 16px; font-size: 1rem; font-weight: 700; border-radius: 12px; border: none; cursor: pointer; }
+.answer-btn.vero { background: var(--accent); color: white; }
+.answer-btn.falso { background: var(--danger); color: white; }
+.answer-btn:disabled { cursor: default; }
+.answer-btn.selected-answer { opacity: 1 !important; box-shadow: 0 0 0 3px white inset; }
+.answer-btn.correct-answer { opacity: 1 !important; box-shadow: 0 0 0 3px #ffd700 inset; }
+.answer-btn.dimmed-answer { background: #3a4552 !important; color: var(--muted) !important; box-shadow: none !important; }
+.answer-btn .tag { display: block; font-size: 0.7rem; font-weight: 600; margin-top: 4px; opacity: 0.9; }
+
+.quit-btn {
+    display: block;
+    margin: 0 0 14px auto;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 0.8rem;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.reset-link {
+    display: block;
+    background: none;
+    border: none;
+    color: var(--danger);
+    font-size: 0.8rem;
+    text-decoration: underline;
+    cursor: pointer;
+    margin: 0 0 10px;
+    padding: 0;
+}
+
+.feedback { padding: 14px 16px; border-radius: 10px; font-weight: 700; margin-bottom: 16px; }
+.feedback.ok { background: rgba(47,158,68,0.2); border: 1px solid var(--accent); }
+.feedback.bad { background: rgba(217,70,61,0.2); border: 1px solid var(--danger); }
+.next-btn { width: 100%; padding: 14px; margin-top: 14px; border-radius: 10px; border: none; background: #3a4a5c; color: var(--text); font-weight: 700; font-size: 1rem; }
+
+/* --- результат --- */
+.result-banner { padding: 14px 16px; border-radius: 10px; font-weight: 700; margin-bottom: 16px; }
+.result-banner.pass { background: rgba(47,158,68,0.2); border: 1px solid var(--accent); }
+.result-banner.fail { background: rgba(217,70,61,0.2); border: 1px solid var(--danger); }
+.history-item { border-left: 3px solid var(--border); padding: 10px 12px; margin-bottom: 10px; border-radius: 6px; background: #22303f; }
+.history-item.ok { border-left-color: var(--accent); }
+.history-item.bad { border-left-color: var(--danger); }
+.history-text { margin: 0 0 6px; }
+.history-answer { margin: 0; font-size: 0.85rem; color: var(--muted); }
+.actions { display: flex; gap: 12px; margin-top: 20px; }
+.actions .mode-btn { flex: 1; text-align: center; align-items: center; }
+
+.count-picker { display: flex; gap: 8px; margin: 10px 0 4px; flex-wrap: wrap; }
+.count-chip { padding: 8px 14px; border-radius: 20px; background: #22303f; border: 1px solid var(--border); color: var(--text); font-weight: 600; font-size: 0.85rem; }
+.count-chip.active { background: var(--accent); border-color: var(--accent); }
+
+.mode-btn.mistakes { background: linear-gradient(135deg, #b8860b, #8a6508); border: none; }
+
+.translate-btn {
+    display: block;
+    width: 100%;
+    background: #22303f;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+    cursor: pointer;
+}
+.translation-block {
+    background: #1c2b3a;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+.translation-block .lbl { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 4px; display: block; }
+
+.explanation-block {
+    background: #22303f;
+    border: 1px solid var(--border);
+    border-left: 3px solid #4a7fb5;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+.explanation-block .lbl { color: #7fb3e0; font-weight: 700; font-size: 0.8rem; margin-bottom: 4px; display: block; }
+.rtl-text { direction: rtl; text-align: right; display: block; unicode-bidi: isolate; }
+</style>
+</head>
+<body>
+<header>🚗 Quiz Patente B</header>
+<main>
+
+<!-- ЕКРАН 0: вибір мови перекладу -->
+<div id="screen-language" class="card">
+    <h1>Quiz Patente B</h1>
+    <p class="muted">Scegli la lingua di traduzione / زبان کا انتخاب کریں / भाषा चुनें</p>
+    <div class="mode-grid">
+        <button class="mode-btn" id="btnLangUrdu">
+            <span class="mode-title">اردو (Urdu)</span>
+            <span class="mode-sub">Translate questions to Urdu</span>
+        </button>
+        <button class="mode-btn" id="btnLangHindi">
+            <span class="mode-title">हिन्दी (Hindi)</span>
+            <span class="mode-sub">Translate questions to Hindi</span>
+        </button>
+    </div>
+</div>
+
+<!-- ЕКРАН 1: завантаження даних -->
+<div id="screen-upload" class="card hidden">
+    <h1>Quiz Patente B</h1>
+    <p class="muted" id="loadingStatus">Caricamento del database delle domande...</p>
+</div>
+
+<!-- ЕКРАН 2: головне меню -->
+<div id="screen-home" class="card hidden">
+    <h1>Quiz Patente B</h1>
+    <p class="muted">Totale domande nel database: <strong id="totalCount">0</strong></p>
+    <p class="muted" id="statsLine"></p>
+    <button id="btnResetProgress" class="reset-link hidden">Reimposta tutte le statistiche e gli errori</button>
+
+    <div class="mode-grid">
+        <button class="mode-btn exam" id="btnExam">
+            <span class="mode-title">Simulazione d'esame</span>
+            <span class="mode-sub">30 domande · massimo 3 errori</span>
+        </button>
+        <button class="mode-btn" id="btnRandom30">
+            <span class="mode-title">Domande casuali</span>
+            <span class="mode-sub">30 domande da tutti gli argomenti</span>
+        </button>
+        <button class="mode-btn" id="btnRandom100">
+            <span class="mode-title">Sessione lunga</span>
+            <span class="mode-sub">100 domande casuali</span>
+        </button>
+        <button class="mode-btn mistakes hidden" id="btnMistakes">
+            <span class="mode-title">🔁 I miei errori (<span id="mistakesCount">0</span>)</span>
+            <span class="mode-sub">Ripeti solo le domande sbagliate</span>
+        </button>
+    </div>
+
+    <h2>Esercitati per argomento</h2>
+    <div class="chapters" id="chaptersList"></div>
+</div>
+
+<!-- ЕКРАН 3: питання -->
+<div id="screen-question" class="card hidden">
+    <div class="progress-row">
+        <span id="qPos">Domanda 1 / 30</span>
+        <span class="score" id="qScore">✅ 0 &nbsp; ❌ 0</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="qProgressFill" style="width:0%;"></div></div>
+    <button id="btnQuit" class="quit-btn">✕ ✕ Termina il test in anticipo</button>
+
+    <div class="question-image hidden" id="qImageWrap">
+        <img id="qImage" src="" alt="Segnale stradale">
+    </div>
+
+    <p class="question-text" id="qText"></p>
+
+    <button class="translate-btn" id="btnTranslate">🌐 Показати переклад</button>
+    <div id="translationBlock" class="translation-block hidden"></div>
+
+    <div id="qFeedback" class="feedback hidden"></div>
+    <div id="explanationBlock" class="explanation-block hidden"></div>
+
+    <div class="answer-row" id="qAnswerRow">
+        <button class="answer-btn vero" id="btnVero">VERO</button>
+        <button class="answer-btn falso" id="btnFalso">FALSO</button>
+    </div>
+    <button class="next-btn hidden" id="btnNext">Avanti →</button>
+</div>
+
+<!-- ЕКРАН 4: результат -->
+<div id="screen-result" class="card hidden">
+    <h1>Risultato</h1>
+    <div id="resultBanner" class="result-banner hidden"></div>
+    <p>Risposte corrette: <strong id="resScore">0</strong> su <span id="resTotal">0</span></p>
+    <p>Errori: <strong id="resErrors">0</strong></p>
+    <h2>Revisione delle domande</h2>
+    <div class="history" id="resHistory"></div>
+    <div class="actions">
+        <button class="mode-btn" id="btnHome">Home</button>
+        <button class="mode-btn" id="btnRestart">Riprova</button>
+    </div>
+</div>
+
+</main>
+
+<script>
+// ---------- Стан ----------
+let ALL_QUESTIONS = [];   // {id, text, answer(bool), chapter, image, explanation}
+let IMAGES = {};          // filename -> object URL
+let quiz = null;          // {ids, pos, score, errors, mode, maxErrors, history}
+
+// Мова перекладу — обирається на першому екрані, зберігається на пристрої
+let TRANSLATE_LANG = localStorage.getItem("patenteLang") || null; // "ur" або "hi"
+const LANG_NAMES = { ur: "urdu", hi: "hindi" };
+const LANG_RTL = { ur: true, hi: false };
+let mistakeIds = new Set();      // id-и питань, де хоч раз була помилка
+let totalAnswered = 0;
+let totalCorrect = 0;
+
+const STORAGE_KEY = "patenteQuizProgress";
+
+function loadProgress() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        mistakeIds = new Set(data.mistakeIds || []);
+        totalAnswered = data.totalAnswered || 0;
+        totalCorrect = data.totalCorrect || 0;
+    } catch (err) {
+        console.warn("Не вдалося завантажити збережений прогрес:", err);
+    }
+}
+
+function saveProgress() {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            mistakeIds: Array.from(mistakeIds),
+            totalAnswered,
+            totalCorrect,
+        }));
+    } catch (err) {
+        console.warn("Не вдалося зберегти прогрес:", err);
+    }
+}
+const translationCache = {};     // id -> перекладений текст
+
+const EXAM_QUESTIONS_COUNT = 30;
+const EXAM_MAX_ERRORS = 3;
+
+const TEXT_KEYS = ["q","testo","domanda","question","text","quesito"];
+const ANSWER_KEYS = ["a","risposta","answer","vero","esito","correct"];
+const IMAGE_KEYS = ["img","immagine","image","figura","img_url","picture"];
+const EXPLANATION_KEYS = ["spiegazione","explanation","note","commento","help","descrizione","motivazione"];
+
+function normalizeAnswer(raw) {
+    if (typeof raw === "boolean") return raw;
+    if (typeof raw === "number") return !!raw;
+    if (typeof raw === "string") {
+        const v = raw.trim().toLowerCase();
+        return v === "vero" || v === "true" || v === "v" || v === "1" || v === "si" || v === "sì";
+    }
+    return false;
+}
+
+function normalizeImagePath(raw) {
+    if (!raw) return null;
+    const parts = String(raw).split("/");
+    return parts[parts.length - 1] || null;
+}
+
+function prettifyChapter(slug) {
+    return String(slug)
+        .replace(/[-_]+/g, " ")
+        .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function getFirst(obj, keys) {
+    for (const k of keys) {
+        if (obj[k] !== undefined) return obj[k];
+    }
+    return undefined;
+}
+
+// Дані бувають у двох форматах:
+// 1) Плаский масив питань: [ {q/testo, a/risposta, img, ...}, ... ]
+// 2) Вкладений об'єкт: { "тема": { "підтема": [ {q, a, img}, ... ], ... }, ... }
+function normalizeQuestions(raw) {
+    const questions = [];
+    let idCounter = 0;
+
+    function pushIfQuestion(item, chapterLabel) {
+        if (!item || typeof item !== "object" || Array.isArray(item)) return false;
+        const text = getFirst(item, TEXT_KEYS);
+        if (text === undefined) return false;
+        questions.push({
+            id: idCounter++,
+            text: text || "",
+            answer: normalizeAnswer(getFirst(item, ANSWER_KEYS)),
+            chapter: chapterLabel,
+            image: normalizeImagePath(getFirst(item, IMAGE_KEYS)),
+            explanation: getFirst(item, EXPLANATION_KEYS) || null,
+        });
+        return true;
+    }
+
+    function walk(node, chapterLabel) {
+        if (Array.isArray(node)) {
+            node.forEach(item => pushIfQuestion(item, chapterLabel));
+        } else if (node && typeof node === "object") {
+            Object.values(node).forEach(v => walk(v, chapterLabel));
+        }
+    }
+
+    if (Array.isArray(raw)) {
+        raw.forEach(item => pushIfQuestion(item, item.capitolo ?? item.tema ?? item.chapter ?? "Senza categoria"));
+    } else if (raw && typeof raw === "object") {
+        Object.entries(raw).forEach(([topKey, topValue]) => {
+            walk(topValue, prettifyChapter(topKey));
+        });
+    }
+
+    return questions;
+}
+
+// ---------- Автоматичне завантаження бази питань ----------
+// Картинки знаків беремо напряму з публічного CDN (jsDelivr, дзеркало
+// відкритого репозиторію github.com/Ed0ardo/QuizPatenteB), тому вручну
+// нічого заливати не треба.
+const IMAGE_CDN_BASE = "https://cdn.jsdelivr.net/gh/Ed0ardo/QuizPatenteB@main/img_sign/";
+
+function imageUrl(filename) {
+    return filename ? (IMAGE_CDN_BASE + filename) : null;
+}
+
+async function loadQuizData() {
+    const statusEl = document.getElementById("loadingStatus");
+    try {
+        const res = await fetch("quiz.json");
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const raw = await res.json();
+        ALL_QUESTIONS = normalizeQuestions(raw);
+        statusEl.textContent = `Caricate ${ALL_QUESTIONS.length} domande ✅`;
+        goHome();
+    } catch (err) {
+        statusEl.textContent = "Impossibile caricare il database (quiz.json). Assicurati che sia accanto a index.html sul server.";
+    }
+}
+
+function startApp() {
+    document.getElementById("screen-language").classList.add("hidden");
+    document.getElementById("screen-upload").classList.remove("hidden");
+    loadProgress();
+    loadQuizData();
+}
+
+document.getElementById("btnLangUrdu").addEventListener("click", () => {
+    TRANSLATE_LANG = "ur";
+    localStorage.setItem("patenteLang", "ur");
+    startApp();
+});
+document.getElementById("btnLangHindi").addEventListener("click", () => {
+    TRANSLATE_LANG = "hi";
+    localStorage.setItem("patenteLang", "hi");
+    startApp();
+});
+
+if (TRANSLATE_LANG) {
+    startApp();
+}
+
+// ---------- Навігація між екранами ----------
+function showScreen(id) {
+    ["screen-language","screen-upload","screen-home","screen-question","screen-result"].forEach(s => {
+        document.getElementById(s).classList.toggle("hidden", s !== id);
+    });
+}
+
+function goHome() {
+    document.getElementById("totalCount").textContent = ALL_QUESTIONS.length;
+    renderChapters();
+    const mBtn = document.getElementById("btnMistakes");
+    document.getElementById("mistakesCount").textContent = mistakeIds.size;
+    mBtn.classList.toggle("hidden", mistakeIds.size === 0);
+
+    const statsLine = document.getElementById("statsLine");
+    const resetBtn = document.getElementById("btnResetProgress");
+    if (totalAnswered > 0) {
+        const pct = Math.round((totalCorrect / totalAnswered) * 100);
+        statsLine.textContent = `Totale: ${totalAnswered} risposte, ${pct}% corrette`;
+        resetBtn.classList.remove("hidden");
+    } else {
+        statsLine.textContent = "";
+        resetBtn.classList.add("hidden");
+    }
+
+    showScreen("screen-home");
+}
+
+function renderChapters() {
+    const chapters = {};
+    ALL_QUESTIONS.forEach(q => {
+        chapters[q.chapter] = (chapters[q.chapter] || 0) + 1;
+    });
+    const entries = Object.entries(chapters).sort((a,b) => {
+        const na = Number(a[0]), nb = Number(b[0]);
+        if (!isNaN(na) && !isNaN(nb)) return na - nb;
+        return String(a[0]).localeCompare(String(b[0]));
+    });
+    const wrap = document.getElementById("chaptersList");
+    wrap.innerHTML = "";
+    entries.forEach(([chapter, count]) => {
+        const btn = document.createElement("button");
+        btn.className = "chapter-btn";
+        btn.innerHTML = `<span>Argomento ${chapter}</span><span class="count">${count} domande</span>`;
+        btn.addEventListener("click", () => startChapter(chapter, 20));
+        wrap.appendChild(btn);
+    });
+}
+
+// ---------- Старт квізу ----------
+function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+function startSession(ids, mode, maxErrors) {
+    quiz = { ids, pos: 0, score: 0, errors: 0, mode, maxErrors: maxErrors ?? null, history: [] };
+    showScreen("screen-question");
+    renderQuestion();
+}
+
+function startRandom(count) {
+    const ids = shuffle(ALL_QUESTIONS.map(q => q.id)).slice(0, count);
+    startSession(ids, "random");
+}
+
+function startExam() {
+    const ids = shuffle(ALL_QUESTIONS.map(q => q.id)).slice(0, EXAM_QUESTIONS_COUNT);
+    startSession(ids, "exam", EXAM_MAX_ERRORS);
+}
+
+function startChapter(chapter, count) {
+    const ids = shuffle(ALL_QUESTIONS.filter(q => String(q.chapter) === String(chapter)).map(q => q.id)).slice(0, count);
+    startSession(ids, "chapter:" + chapter);
+}
+
+function startMistakes() {
+    const ids = shuffle(Array.from(mistakeIds));
+    startSession(ids, "mistakes");
+}
+
+document.getElementById("btnMistakes").addEventListener("click", startMistakes);
+
+document.getElementById("btnResetProgress").addEventListener("click", () => {
+    if (confirm("Reimpostare tutte le statistiche e l'elenco degli errori? Questa azione non puo essere annullata.")) {
+        mistakeIds = new Set();
+        totalAnswered = 0;
+        totalCorrect = 0;
+        saveProgress();
+        goHome();
+    }
+});
+
+document.getElementById("btnExam").addEventListener("click", startExam);
+document.getElementById("btnRandom30").addEventListener("click", () => startRandom(30));
+document.getElementById("btnRandom100").addEventListener("click", () => startRandom(100));
+
+// ---------- Питання ----------
+let questionsById = {};
+function rebuildIndex() {
+    questionsById = {};
+    ALL_QUESTIONS.forEach(q => questionsById[q.id] = q);
+}
+
+function renderQuestion() {
+    rebuildIndex();
+    if (quiz.pos >= quiz.ids.length) { renderResult(); return; }
+
+    const q = questionsById[quiz.ids[quiz.pos]];
+    document.getElementById("qPos").textContent = `Domanda ${quiz.pos + 1} / ${quiz.ids.length}`;
+    let scoreText = `✅ ${quiz.score} &nbsp; ❌ ${quiz.errors}`;
+    if (quiz.maxErrors !== null) scoreText += ` / ${quiz.maxErrors} consentiti`;
+    document.getElementById("qScore").innerHTML = scoreText;
+    document.getElementById("qProgressFill").style.width = ((quiz.pos / quiz.ids.length) * 100) + "%";
+
+    const imgWrap = document.getElementById("qImageWrap");
+    const imgEl = document.getElementById("qImage");
+    if (q.image) {
+        imgEl.src = imageUrl(q.image);
+        imgWrap.classList.remove("hidden");
+    } else {
+        imgWrap.classList.add("hidden");
+    }
+
+    document.getElementById("qText").textContent = q.text;
+    document.getElementById("qFeedback").classList.add("hidden");
+    document.getElementById("qAnswerRow").classList.remove("hidden");
+    document.getElementById("btnNext").classList.add("hidden");
+
+    const veroBtn = document.getElementById("btnVero");
+    const falsoBtn = document.getElementById("btnFalso");
+    veroBtn.disabled = false;
+    falsoBtn.disabled = false;
+    veroBtn.innerHTML = "VERO";
+    falsoBtn.innerHTML = "FALSO";
+    veroBtn.classList.remove("selected-answer","correct-answer");
+    falsoBtn.classList.remove("selected-answer","correct-answer");
+
+    // скидаємо переклад і пояснення для нового питання
+    const tBlock = document.getElementById("translationBlock");
+    tBlock.classList.add("hidden");
+    tBlock.innerHTML = "";
+    document.getElementById("btnTranslate").textContent = `🌐 Mostra traduzione in ${LANG_NAMES[TRANSLATE_LANG]}`;
+    document.getElementById("btnTranslate").classList.remove("hidden");
+
+    const eBlock = document.getElementById("explanationBlock");
+    eBlock.classList.add("hidden");
+    eBlock.innerHTML = "";
+}
+
+function answerQuestion(given) {
+    const q = questionsById[quiz.ids[quiz.pos]];
+    const correct = given === q.answer;
+    totalAnswered++;
+    if (correct) {
+        quiz.score++;
+        totalCorrect++;
+        // якщо це був повтор помилки і тепер відповіли правильно — прибираємо з "моїх помилок"
+        if (quiz.mode === "mistakes") mistakeIds.delete(q.id);
+    } else {
+        quiz.errors++;
+        mistakeIds.add(q.id);
+    }
+    saveProgress();
+    quiz.history.push({ text: q.text, image: q.image, given, correctAnswer: q.answer, wasCorrect: correct, explanation: q.explanation });
+
+    document.getElementById("btnVero").disabled = true;
+    document.getElementById("btnFalso").disabled = true;
+
+    const veroBtn = document.getElementById("btnVero");
+    const falsoBtn = document.getElementById("btnFalso");
+    const selectedBtn = given ? veroBtn : falsoBtn;
+    const correctBtn = q.answer ? veroBtn : falsoBtn;
+
+    selectedBtn.innerHTML += `<span class="tag">👉 la tua risposta</span>`;
+    if (!correct) {
+        correctBtn.innerHTML += `<span class="tag">✓ risposta corretta</span>`;
+        correctBtn.classList.add("correct-answer");
+    }
+    selectedBtn.classList.add("selected-answer");
+
+    const fb = document.getElementById("qFeedback");
+    fb.classList.remove("hidden","ok","bad");
+    fb.classList.add(correct ? "ok" : "bad");
+    fb.textContent = correct ? "✅ Corretto!" : `❌ Sbagliato. Risposta corretta: ${q.answer ? "VERO" : "FALSO"}`;
+
+    const eBlock = document.getElementById("explanationBlock");
+    if (q.explanation) {
+        eBlock.innerHTML = `<span class="lbl">Spiegazione</span>${q.explanation}`;
+        eBlock.classList.remove("hidden");
+    } else {
+        eBlock.innerHTML = `<span class="lbl">Spiegazione</span>Nessuna spiegazione disponibile per questa domanda.`;
+        eBlock.classList.remove("hidden");
+    }
+
+    document.getElementById("btnNext").classList.remove("hidden");
+}
+
+async function translateText(text) {
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=it|${TRANSLATE_LANG}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Помилка мережі");
+    const data = await res.json();
+    if (!data || !data.responseData || !data.responseData.translatedText) {
+        throw new Error("Порожня відповідь перекладача");
+    }
+    return data.responseData.translatedText;
+}
+
+document.getElementById("btnTranslate").addEventListener("click", async () => {
+    const q = questionsById[quiz.ids[quiz.pos]];
+    const btn = document.getElementById("btnTranslate");
+    const tBlock = document.getElementById("translationBlock");
+
+    if (!tBlock.classList.contains("hidden")) {
+        tBlock.classList.add("hidden");
+        btn.textContent = `🌐 Mostra traduzione in ${LANG_NAMES[TRANSLATE_LANG]}`;
+        return;
+    }
+
+    if (translationCache[q.id]) {
+        tBlock.innerHTML = `<span class="lbl">Traduzione in ${LANG_NAMES[TRANSLATE_LANG]}</span><span class="${LANG_RTL[TRANSLATE_LANG] ? 'rtl-text' : ''}">${translationCache[q.id]}</span>`;
+        tBlock.classList.remove("hidden");
+        btn.textContent = `🌐 Nascondi traduzione in ${LANG_NAMES[TRANSLATE_LANG]}`;
+        return;
+    }
+
+    btn.textContent = "Traduzione in corso...";
+    btn.disabled = true;
+    try {
+        const translated = await translateText(q.text);
+        translationCache[q.id] = translated;
+        tBlock.innerHTML = `<span class="lbl">Traduzione in ${LANG_NAMES[TRANSLATE_LANG]}</span><span class="${LANG_RTL[TRANSLATE_LANG] ? 'rtl-text' : ''}">${translated}</span>`;
+        tBlock.classList.remove("hidden");
+        btn.textContent = `🌐 Nascondi traduzione in ${LANG_NAMES[TRANSLATE_LANG]}`;
+    } catch (err) {
+        tBlock.innerHTML = `<span class="lbl">Errore</span>Traduzione non riuscita. Controlla la connessione internet e riprova.`;
+        tBlock.classList.remove("hidden");
+        btn.textContent = `🌐 Mostra traduzione in ${LANG_NAMES[TRANSLATE_LANG]}`;
+    } finally {
+        btn.disabled = false;
+    }
+});
+
+document.getElementById("btnQuit").addEventListener("click", () => {
+    if (confirm("Terminare il test ora e mostrare i risultati delle domande a cui hai gia risposto?")) {
+        renderResult();
+    }
+});
+
+document.getElementById("btnVero").addEventListener("click", () => answerQuestion(true));
+document.getElementById("btnFalso").addEventListener("click", () => answerQuestion(false));
+document.getElementById("btnNext").addEventListener("click", () => {
+    quiz.pos++;
+    if (quiz.maxErrors !== null && quiz.errors > quiz.maxErrors) { renderResult(); return; }
+    renderQuestion();
+});
+
+// ---------- Результат ----------
+function renderResult() {
+    showScreen("screen-result");
+    const banner = document.getElementById("resultBanner");
+    banner.classList.add("hidden");
+    if (quiz.mode === "exam") {
+        const passed = quiz.errors <= EXAM_MAX_ERRORS;
+        banner.classList.remove("hidden");
+        banner.classList.toggle("pass", passed);
+        banner.classList.toggle("fail", !passed);
+        banner.textContent = passed
+            ? `✅ Esame superato! Errori: ${quiz.errors} (consentiti ${EXAM_MAX_ERRORS})`
+            : `❌ Esame non superato. Errori: ${quiz.errors} (consentiti ${EXAM_MAX_ERRORS})`;
+    }
+    document.getElementById("resScore").textContent = quiz.score;
+    document.getElementById("resTotal").textContent = quiz.history.length;
+    document.getElementById("resErrors").textContent = quiz.errors;
+
+    const histWrap = document.getElementById("resHistory");
+    histWrap.innerHTML = "";
+    quiz.history.forEach(h => {
+        const div = document.createElement("div");
+        div.className = "history-item " + (h.wasCorrect ? "ok" : "bad");
+        div.innerHTML = `<p class="history-text">${h.text}</p>
+            <p class="history-answer">La tua risposta: <strong>${h.given ? "VERO" : "FALSO"}</strong>
+            ${h.wasCorrect ? "" : ` — corretta: <strong>${h.correctAnswer ? "VERO" : "FALSO"}</strong>`}</p>`;
+        histWrap.appendChild(div);
+    });
+}
+
+document.getElementById("btnHome").addEventListener("click", goHome);
+document.getElementById("btnRestart").addEventListener("click", () => startSession(shuffle(quiz.ids.slice()), quiz.mode, quiz.maxErrors));
+
+// Реєстрація service worker — щоб застосунок працював офлайн після першого відкриття
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("service-worker.js").catch(() => {});
+    });
+}
+</script>
+</body>
+</html>
